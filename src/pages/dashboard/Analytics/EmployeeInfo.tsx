@@ -55,6 +55,7 @@ const EmployeeInfo: React.FC<EmployeeInfoProps> = ({
   };
   const [fetchError, setFetchError] = useState("");
   const [fypData, setFypData] = useState<any>("");
+  const [employeeData, setEmployeeData] = useState<any[]>([]);
   const myStyle = {
     width: "100%",
   };
@@ -71,6 +72,8 @@ const EmployeeInfo: React.FC<EmployeeInfoProps> = ({
         setFetchError("could not fetch data");
         setFypData("");
         console.log(error);
+      } else {
+        setEmployeeData(data || []);
       }
       if (data) {
         setFypData(data);
@@ -81,50 +84,70 @@ const EmployeeInfo: React.FC<EmployeeInfoProps> = ({
     fetchFypData();
   }, []);
 
+  const uniqueEmployeeData = Object.values(
+    employeeData.reduce((acc, cur) => {
+      if (!acc[cur.Employee_Name]) {
+        acc[cur.Employee_Name] = cur;
+      }
+      return acc;
+    }, {})
+  );
+  const latestEmployeeData: { [key: string]: any } = {};
+  employeeData
+    .slice() // Create a copy of the array to avoid mutating the original data
+    .sort((a, b) => b.RSSI - a.RSSI) // Sort by RSSI in descending order
+    .forEach((data) => {
+      if (!latestEmployeeData[data.Employee_Name]) {
+        latestEmployeeData[data.Employee_Name] = data;
+      }
+    });
+  const filteredEmployeeData = Object.values(latestEmployeeData);
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Live Tracking</h1>
       {fetchError && <p>{fetchError}</p>}
-      {fypData && (
+      {filteredEmployeeData.length > 0 && (
         <div style={myStyle}>
-          {fypData
-            .slice(fypData.length - 3, fypData.length)
-            .map((data: any) => (
-              <div key={data.id} style={mapping}>
-                <div style={styles.info}>
-                  <span>Emp ID:</span>
-                  <span>{data.id}</span>
+          {filteredEmployeeData.map(
+            (data: any) =>
+              data.Employee_Name &&
+              data.Employee_Name.trim() !== "" && (
+                <div key={data.id} style={mapping}>
+                  <div style={styles.info}>
+                    <span>Emp ID:</span>
+                    <span>{data.RSSI}</span>
+                  </div>
+                  <div style={styles.info}>
+                    <span>Emp Name:</span>
+                    <span>{data.Employee_Name}</span>
+                  </div>
+                  <div style={styles.info}>
+                    <span>Designation:</span>
+                    <span>{data.designation}</span>
+                  </div>
+                  <div style={styles.info}>
+                    <span>Emp Tag Battery:</span>
+                    <span style={{ color: "green" }}>{empTagBattery}</span>
+                  </div>
+                  <div style={styles.info}>
+                    <span>Emp Status:</span>
+                    <span style={{ color: "red" }}>{data.location}</span>
+                  </div>
+                  <div style={styles.info}>
+                    <span>Sensor ID:</span>
+                    <span>{data.RSSI}</span>
+                  </div>
+                  <div style={styles.info}>
+                    <span>Sensor Status:</span>
+                    <span style={{ color: "green" }}>
+                      {data.RSSI ? "Active" : "Offline"}
+                    </span>
+                  </div>
+                  {/* ... */}
+                  <button style={styles.button}>Detail</button>
                 </div>
-                <div style={styles.info}>
-                  <span>Emp Name:</span>
-                  <span>{data.name}</span>
-                </div>
-                <div style={styles.info}>
-                  <span>Designation:</span>
-                  <span>{data.designation}</span>
-                </div>
-                <div style={styles.info}>
-                  <span>Emp Tag Battery:</span>
-                  <span style={{ color: "green" }}>{empTagBattery}</span>
-                </div>
-                <div style={styles.info}>
-                  <span>Emp Status:</span>
-                  <span style={{ color: "red" }}>{data.location}</span>
-                </div>
-                <div style={styles.info}>
-                  <span>Sensor ID:</span>
-                  <span>{data.RSSI}</span>
-                </div>
-                <div style={styles.info}>
-                  <span>Sensor Status:</span>
-                  <span style={{ color: "green" }}>
-                    {data.RSSI ? "Active" : "Offline"}
-                  </span>
-                </div>
-                {/* ... */}
-                <button style={styles.button}>Detail</button>
-              </div>
-            ))}
+              )
+          )}
         </div>
       )}
     </div>
