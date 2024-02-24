@@ -119,13 +119,13 @@ const MENU_ITEMS: MenuItemTypes[] = [
   //         },
   //     ],
   // },
-  //   {
-  //       key: 'apps-calendar',
-  //       label: 'Calendar',
-  //       isTitle: false,
-  //       icon: 'ri-calendar-2-line',
-  //       url: '/apps/calendar',
-  //   },
+  // {
+  //   key: "apps-calendar",
+  //   label: "Calendar",
+  //   isTitle: false,
+  //   icon: "ri-calendar-2-line",
+  //   url: "/apps/calendar",
+  // },
   //{
   // key: 'apps-email',
   // label: 'Email',
