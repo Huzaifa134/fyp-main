@@ -66,18 +66,44 @@ const EmployeeInfo: React.FC<EmployeeInfoProps> = ({
 
   useEffect(() => {
     const fetchFypData = async () => {
-      const { data, error } = await supabase.from("main").select();
-      if (error) {
-        setFetchError("could not fetch data");
-        setFypData("");
-        console.log(error);
-      }
-      if (data) {
-        setFypData(data);
-        setFetchError("");
-        console.log(data);
+      try {
+        const { data, error } = await supabase
+          .from("main")
+          .select("*")
+          .order("Timestamp", { ascending: false }); // Order by timestamp_column in descending order
+
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          const uniqueNamesMap = new Map();
+
+          // Iterate over the data and update the map with the latest record for each unique name
+          data.forEach((record) => {
+            const name = record.Employee_Name.trim();
+
+            // If the name is not in the map or if the current record is newer, update the map
+            if (
+              !uniqueNamesMap.has(name) ||
+              record.Timestamp > uniqueNamesMap.get(name).Timestamp
+            ) {
+              uniqueNamesMap.set(name, record);
+            }
+          });
+
+          // Extract the values from the map to get unique records with the latest values
+          const uniqueRecords = Array.from(uniqueNamesMap.values());
+          setFypData(uniqueRecords);
+          setFetchError("");
+          console.log(uniqueRecords);
+        }
+      } catch (error) {
+        setFetchError("Could not fetch data");
+        console.error(error);
       }
     };
+
     fetchFypData();
   }, []);
 
@@ -87,46 +113,46 @@ const EmployeeInfo: React.FC<EmployeeInfoProps> = ({
       {fetchError && <p>{fetchError}</p>}
       {fypData && (
         <div style={myStyle}>
-          {fypData.slice(fypData.length - 3, fypData.length).map(
-            (data: any) =>
-              data.Employee_Name &&
-              data.Employee_Name.trim() !== "" && (
-                <div key={data.id} style={mapping}>
-                  <div style={styles.info}>
-                    <span>Emp ID:</span>
-                    <span>{data.id}</span>
-                  </div>
-                  <div style={styles.info}>
-                    <span>Emp Name:</span>
-                    <span>{data.Employee_Name}</span>
-                  </div>
-                  <div style={styles.info}>
-                    <span>Designation:</span>
-                    <span>{data.designation}</span>
-                  </div>
-                  <div style={styles.info}>
-                    <span>Emp Tag Battery:</span>
-                    <span style={{ color: "green" }}>{empTagBattery}</span>
-                  </div>
-                  <div style={styles.info}>
-                    <span>Emp Status:</span>
-                    <span style={{ color: "red" }}>{data.location}</span>
-                  </div>
-                  <div style={styles.info}>
-                    <span>Sensor ID:</span>
-                    <span>{data.RSSI}</span>
-                  </div>
-                  <div style={styles.info}>
-                    <span>Sensor Status:</span>
-                    <span style={{ color: "green" }}>
-                      {data.RSSI ? "Active" : "Offline"}
-                    </span>
-                  </div>
-                  {/* ... */}
-                  <button style={styles.button}>Detail</button>
-                </div>
-              )
-          )}
+          {fypData.map((data: any) => (
+            <div key={data.id} style={mapping}>
+              {/* <div style={styles.info}>
+                <span>Emp ID:</span>
+                <span>{data.empId}</span>
+              </div> */}
+              <div style={styles.info}>
+                <span>Emp Name:</span>
+                <span>{data.Employee_Name}</span>
+              </div>
+              <div style={styles.info}>
+                <span>Designation:</span>
+                <span>Worker</span>
+              </div>
+              <div style={styles.info}>
+                <span>Emp Tag Battery:</span>
+                <span style={{ color: "green" }}>80%</span>
+              </div>
+              {/* <div style={styles.info}>
+                <span>Emp Status:</span>
+                <span style={{ color: "red" }}>{data.empStatus}</span>
+              </div> */}
+              {/* <div style={styles.info}>
+                <span>Sensor ID:</span>
+                <span>{data.RSSI}</span>
+              </div> */}
+              <div style={styles.info}>
+                <span>Employee Status:</span>
+                <span style={{ color: "green" }}>
+                  {data.RSSI ? "Active" : "Offline"}
+                </span>
+              </div>
+              {/* <div style={styles.info}>
+                <span>Last Update:</span>
+                <span>{data.lastUpdate}</span>
+              </div> */}
+              {/* ... */}
+              {/* <button style={styles.button}>Detail</button> */}
+            </div>
+          ))}
         </div>
       )}
     </div>
